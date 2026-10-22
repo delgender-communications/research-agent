@@ -1,0 +1,29 @@
+{
+  "city": "Johannesburg",
+  "country": "south africa",
+  "industry": "solar installation",
+  "industryLabel": "Solar installation",
+  "industryKeywords": ["solar", "photovoltaic", "pv", "inverter", "inverters", "battery storage", "renewable energy"],
+  "locationKeywords": [
+    "johannesburg", "joburg", "gauteng", "sandton", "randburg", "roodepoort", "midrand", "fourways",
+    "bryanston", "rosebank", "alberton", "germiston", "edenvale", "boksburg", "benoni",
+    "kempton park", "centurion", "soweto", "northcliff", "linden", "melville", "bedfordview"
+  ],
+  "suburbs": [
+    "Sandton", "Randburg", "Roodepoort", "Midrand", "Fourways", "Bryanston", "Rosebank",
+    "Alberton", "Germiston", "Edenvale", "Boksburg", "Kempton Park", "Centurion", "Benoni"
+  ],
+  "queryTemplates": [
+    "{industry} companies {city}",
+    "{industry} installers {suburb}",
+    "{industry} {suburb} contact us",
+    "best {industry} companies in {city}",
+    "{industry} company {city} facebook"
+  ],
+  "maxSearchesPerRun": 10,
+  "resultsPerSearch": 10,
+  "reputationChecks": 3,
+  "maxSitesToAudit": 40,
+  "maxLeadsPerRun": 15,
+  "minScore": 30
+}

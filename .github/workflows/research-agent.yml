@@ -1,0 +1,59 @@
+name: Research agent
+
+on:
+  schedule:
+    # Monday, Wednesday and Friday at 05:00 UTC (07:00 in Johannesburg).
+    - cron: "0 5 * * 1,3,5"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (find leads but don't send them to the portal)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: research-agent
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm test
+
+      # Remembers which companies were already checked between runs.
+      - uses: actions/cache@v4
+        with:
+          path: .state
+          key: agent-state-${{ github.run_id }}
+          restore-keys: agent-state-
+
+      - name: Run the agent
+        run: npm run ${{ inputs.dry_run && 'dry-run' || 'agent' }}
+        env:
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          PORTAL_URL: ${{ secrets.PORTAL_URL }}
+          PORTAL_API_KEY: ${{ secrets.PORTAL_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          CONTACT: ${{ secrets.CONTACT }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: leads
+          path: out/
+          if-no-files-found: ignore
