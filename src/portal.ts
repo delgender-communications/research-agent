@@ -85,17 +85,21 @@ export class PortalClient {
       return { ok: false, status: 503, error: "The portal says the research agent isn't set up (503). Set ResearchAgent__ApiKey on the server." };
     }
 
-    if (!response.ok) {
-      const body = (await response.text()).slice(0, 400);
-      return { ok: false, status: response.status, error: `Portal answered ${response.status}: ${body}` };
+    try {
+      if (!response.ok) {
+        const body = (await response.text()).slice(0, 400);
+        return { ok: false, status: response.status, error: `Portal answered ${response.status}: ${body}` };
+      }
+
+      const parsed = ResultSchema.safeParse(await response.json());
+      if (parsed.success) {
+        info(`  portal: ${parsed.data.added} added, ${parsed.data.skipped.length} skipped`);
+        return { ok: true, data: parsed.data };
+      }
+    } catch (error) {
+      return { ok: false, status: response.status, error: error instanceof Error ? error.message : "couldn't read the portal's reply" };
     }
 
-    const parsed = ResultSchema.safeParse(await response.json());
-    if (!parsed.success) {
-      return { ok: false, status: response.status, error: "The portal's reply wasn't in the expected shape." };
-    }
-
-    info(`  portal: ${parsed.data.added} added, ${parsed.data.skipped.length} skipped`);
-    return { ok: true, data: parsed.data };
+    return { ok: false, status: response.status, error: "The portal's reply wasn't in the expected shape." };
   }
 }
