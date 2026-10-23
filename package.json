@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Finds Johannesburg companies that could use help with PR, social media or their website, and sends them to the Delgender staff portal for review.",
+  "description": "Finds companies in the configured city that could use help with PR, social media or their website, and sends them to the Delgender staff portal for review.",
   "engines": {
     "node": ">=20.12"
   },

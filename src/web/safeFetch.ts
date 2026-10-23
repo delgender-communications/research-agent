@@ -35,8 +35,14 @@ export function isPrivateIp(ip: string): boolean {
   if (version === 6) {
     const lower = ip.toLowerCase();
     if (lower === "::1" || lower === "::") return true;
-    if (lower.startsWith("fc") || lower.startsWith("fd") || lower.startsWith("fe8") ||
-        lower.startsWith("fe9") || lower.startsWith("fea") || lower.startsWith("feb")) {
+    if (
+      lower.startsWith("fc") ||
+      lower.startsWith("fd") ||
+      lower.startsWith("fe8") ||
+      lower.startsWith("fe9") ||
+      lower.startsWith("fea") ||
+      lower.startsWith("feb")
+    ) {
       return true;
     }
     const mapped = lower.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
@@ -109,7 +115,10 @@ export class SafeFetcher {
     let result = await this.getHtmlOnce(url);
 
     // One retry for the kind of failure that is often just a blip.
-    if (!result.ok && (result.reason === "timeout" || result.reason === "network")) {
+    if (
+      !result.ok &&
+      (result.reason === "timeout" || result.reason === "network")
+    ) {
       result = await this.getHtmlOnce(url);
     }
 
@@ -135,7 +144,8 @@ export class SafeFetcher {
           signal: AbortSignal.timeout(this.timeoutMs),
         });
       } catch (error) {
-        const timedOut = error instanceof Error &&
+        const timedOut =
+          error instanceof Error &&
           (error.name === "TimeoutError" || error.name === "AbortError");
         return { ok: false, reason: timedOut ? "timeout" : "network" };
       }
@@ -143,7 +153,8 @@ export class SafeFetcher {
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.get("location");
         await response.body?.cancel();
-        if (!location) return { ok: false, reason: "http", status: response.status };
+        if (!location)
+          return { ok: false, reason: "http", status: response.status };
         try {
           current = new URL(location, current).toString();
         } catch {
@@ -167,12 +178,19 @@ export class SafeFetcher {
       try {
         html = await this.readBody(response);
       } catch (error) {
-        const timedOut = error instanceof Error &&
+        const timedOut =
+          error instanceof Error &&
           (error.name === "TimeoutError" || error.name === "AbortError");
         return { ok: false, reason: timedOut ? "timeout" : "network" };
       }
 
-      return { ok: true, url: current, status: response.status, html, ms: Date.now() - started };
+      return {
+        ok: true,
+        url: current,
+        status: response.status,
+        html,
+        ms: Date.now() - started,
+      };
     }
 
     return { ok: false, reason: "too-many-redirects" };
@@ -190,7 +208,10 @@ export class SafeFetcher {
       return { ok: false, reason: "blocked-host" };
     }
 
-    if (!this.options.allowPrivateHosts && !(await this.isPublicHost(parsed.hostname))) {
+    if (
+      !this.options.allowPrivateHosts &&
+      !(await this.isPublicHost(parsed.hostname))
+    ) {
       return { ok: false, reason: "blocked-host" };
     }
 
@@ -204,7 +225,11 @@ export class SafeFetcher {
   private async isPublicHost(hostname: string): Promise<boolean> {
     const host = hostname.replace(/^\[|\]$/g, "").toLowerCase();
 
-    if (host === "localhost" || host.endsWith(".local") || host.endsWith(".internal")) {
+    if (
+      host === "localhost" ||
+      host.endsWith(".local") ||
+      host.endsWith(".internal")
+    ) {
       return false;
     }
 
@@ -212,7 +237,10 @@ export class SafeFetcher {
 
     try {
       const addresses = await lookup(host, { all: true });
-      return addresses.length > 0 && addresses.every((entry) => !isPrivateIp(entry.address));
+      return (
+        addresses.length > 0 &&
+        addresses.every((entry) => !isPrivateIp(entry.address))
+      );
     } catch {
       // Doesn't resolve: let the real request report it as a network failure.
       return true;
@@ -258,6 +286,8 @@ export class SafeFetcher {
     }
 
     await reader.cancel().catch(() => undefined);
-    return new TextDecoder("utf-8", { fatal: false }).decode(Buffer.concat(chunks));
+    return new TextDecoder("utf-8", { fatal: false }).decode(
+      Buffer.concat(chunks),
+    );
   }
 }

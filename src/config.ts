@@ -58,7 +58,9 @@ export function loadEnv(): AgentEnv {
 
   // GitHub passes unset secrets as empty strings, so treat "" as "not set".
   const cleaned = Object.fromEntries(
-    Object.entries(process.env).filter(([, value]) => value !== undefined && value !== ""),
+    Object.entries(process.env).filter(
+      ([, value]) => value !== undefined && value !== "",
+    ),
   );
 
   const parsed = EnvSchema.safeParse(cleaned);

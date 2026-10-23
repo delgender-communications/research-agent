@@ -9,9 +9,14 @@ const EXPIRY_DAYS = 60;
 export class SeenState {
   private hosts: Record<string, string> = {};
 
-  constructor(private readonly path: string, private readonly now: Date) {
+  constructor(
+    private readonly path: string,
+    private readonly now: Date,
+  ) {
     try {
-      const raw = JSON.parse(readFileSync(path, "utf8")) as { hosts?: Record<string, string> };
+      const raw = JSON.parse(readFileSync(path, "utf8")) as {
+        hosts?: Record<string, string>;
+      };
       const cutoff = now.getTime() - EXPIRY_DAYS * 86_400_000;
       for (const [host, when] of Object.entries(raw.hosts ?? {})) {
         if (new Date(when).getTime() >= cutoff) this.hosts[host] = when;

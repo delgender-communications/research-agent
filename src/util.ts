@@ -41,7 +41,15 @@ export function normalizeHost(host: string): string {
 }
 
 const TWO_PART_SUFFIXES = [
-  "co.za", "org.za", "net.za", "web.za", "gov.za", "ac.za", "com.au", "co.uk", "co.nz",
+  "co.za",
+  "org.za",
+  "net.za",
+  "web.za",
+  "gov.za",
+  "ac.za",
+  "com.au",
+  "co.uk",
+  "co.nz",
 ];
 
 // "shop.example.co.za" -> "example.co.za". Good enough for telling companies apart.
@@ -65,7 +73,16 @@ export function hostOf(url: string): string | null {
 }
 
 const IGNORED_NAME_WORDS = new Set([
-  "pty", "ltd", "limited", "inc", "llc", "cc", "co", "corp", "corporation", "proprietary",
+  "pty",
+  "ltd",
+  "limited",
+  "inc",
+  "llc",
+  "cc",
+  "co",
+  "corp",
+  "corporation",
+  "proprietary",
 ]);
 
 // Same idea as the portal's duplicate check, so names line up on both sides.
@@ -83,10 +100,13 @@ export function nameKey(name: string): string {
 export function containsKeyword(text: string, keywords: string[]): boolean {
   const lower = text.toLowerCase();
   return keywords.some((keyword) => {
-    const escaped = keyword.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}([^\\p{L}\\p{N}]|$)`, "u").test(
-      lower,
-    );
+    const escaped = keyword
+      .toLowerCase()
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(
+      `(^|[^\\p{L}\\p{N}])${escaped}([^\\p{L}\\p{N}]|$)`,
+      "u",
+    ).test(lower);
   });
 }
 
@@ -103,10 +123,43 @@ export function cleanSocialTitle(title: string): string {
 }
 
 const GENERIC_WORDS = new Set([
-  "panel", "panels", "installation", "installations", "installer", "installers", "install",
-  "company", "companies", "service", "services", "quote", "quotes", "quotation", "quotations",
-  "in", "for", "near", "and", "the", "of", "a", "to", "best", "top", "price", "prices", "cost",
-  "costs", "home", "homes", "business", "businesses", "commercial", "residential", "official", "page",
+  "panel",
+  "panels",
+  "installation",
+  "installations",
+  "installer",
+  "installers",
+  "install",
+  "company",
+  "companies",
+  "service",
+  "services",
+  "quote",
+  "quotes",
+  "quotation",
+  "quotations",
+  "in",
+  "for",
+  "near",
+  "and",
+  "the",
+  "of",
+  "a",
+  "to",
+  "best",
+  "top",
+  "price",
+  "prices",
+  "cost",
+  "costs",
+  "home",
+  "homes",
+  "business",
+  "businesses",
+  "commercial",
+  "residential",
+  "official",
+  "page",
 ]);
 
 // True for names that are really search phrases or page headings ("Solar panel
@@ -114,14 +167,25 @@ const GENERIC_WORDS = new Set([
 // and not the name of a company. `ignore` holds the industry and place words.
 export function isGenericName(name: string, ignore: string[]): boolean {
   const trimmed = name.trim();
-  if (trimmed.length < 3 || trimmed.length > 80 || trimmed.endsWith("?")) return true;
-  if (/^(?:best|top|reputable|affordable|cheap|cheapest|find|looking for|need|where|who|how|what|why)\b/i.test(trimmed)) {
+  if (trimmed.length < 3 || trimmed.length > 80 || trimmed.endsWith("?"))
+    return true;
+  if (
+    /^(?:best|top|reputable|affordable|cheap|cheapest|find|looking for|need|where|who|how|what|why)\b/i.test(
+      trimmed,
+    )
+  ) {
     return true;
   }
 
-  const split = (text: string) => text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const split = (text: string) =>
+    text
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter(Boolean);
   const ignored = new Set(ignore.flatMap(split));
-  return split(trimmed).every((word) => GENERIC_WORDS.has(word) || ignored.has(word));
+  return split(trimmed).every(
+    (word) => GENERIC_WORDS.has(word) || ignored.has(word),
+  );
 }
 
 // Facebook and Instagram results include posts, groups, reels and photos.
@@ -136,9 +200,27 @@ export function isBusinessSocialPage(url: string): boolean {
 
   const path = parsed.pathname.toLowerCase();
   const blocked = [
-    "/posts", "/groups", "/permalink", "/watch", "/reel", "/reels", "/photo", "/photos",
-    "/videos", "/events", "/story", "/stories", "/share", "/hashtag", "/marketplace",
-    "/explore", "/tags", "/p/", "/tv/", "/pages/category", "/public",
+    "/posts",
+    "/groups",
+    "/permalink",
+    "/watch",
+    "/reel",
+    "/reels",
+    "/photo",
+    "/photos",
+    "/videos",
+    "/events",
+    "/story",
+    "/stories",
+    "/share",
+    "/hashtag",
+    "/marketplace",
+    "/explore",
+    "/tags",
+    "/p/",
+    "/tv/",
+    "/pages/category",
+    "/public",
   ];
   if (blocked.some((part) => path.includes(part))) return false;
 

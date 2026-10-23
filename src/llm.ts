@@ -40,7 +40,9 @@ export class LlmClient {
     this.failures = reply === null ? this.failures + 1 : 0;
 
     if (this.failures === MAX_CONSECUTIVE_FAILURES) {
-      warn("The AI model failed twice in a row. Skipping it for the rest of this run.");
+      warn(
+        "The AI model failed twice in a row. Skipping it for the rest of this run.",
+      );
     }
 
     return reply;
@@ -51,25 +53,31 @@ export class LlmClient {
 
     for (let tries = 0; tries < 2; tries++) {
       try {
-        const response = await fetch(`${this.settings.baseUrl.replace(/\/$/, "")}/chat/completions`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${this.settings.apiKey}`,
+        const response = await fetch(
+          `${this.settings.baseUrl.replace(/\/$/, "")}/chat/completions`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${this.settings.apiKey}`,
+            },
+            body: JSON.stringify({
+              model: this.settings.model,
+              temperature: 0.2,
+              messages: [
+                { role: "system", content: system },
+                { role: "user", content: user },
+              ],
+            }),
+            signal: AbortSignal.timeout(timeoutMs),
           },
-          body: JSON.stringify({
-            model: this.settings.model,
-            temperature: 0.2,
-            messages: [
-              { role: "system", content: system },
-              { role: "user", content: user },
-            ],
-          }),
-          signal: AbortSignal.timeout(timeoutMs),
-        });
+        );
 
         if (response.status === 429 && tries === 0) {
-          const wait = Math.min(Number(response.headers.get("retry-after")) || 10, 20);
+          const wait = Math.min(
+            Number(response.headers.get("retry-after")) || 10,
+            20,
+          );
           await response.body?.cancel();
           await sleep(wait * 1000);
           continue;
@@ -78,8 +86,12 @@ export class LlmClient {
         if (!response.ok) {
           // The provider's own error message says exactly what's wrong (bad key,
           // unknown model, blocked by account settings), so show it.
-          const detail = (await response.text()).replace(/\s+/g, " ").slice(0, 300);
-          warn(`AI model answered ${response.status}${detail ? `: ${detail}` : "."}`);
+          const detail = (await response.text())
+            .replace(/\s+/g, " ")
+            .slice(0, 300);
+          warn(
+            `AI model answered ${response.status}${detail ? `: ${detail}` : "."}`,
+          );
           return null;
         }
 
@@ -89,7 +101,8 @@ export class LlmClient {
         };
         return data.choices?.[0]?.message?.content ?? null;
       } catch (error) {
-        const timedOut = error instanceof Error && error.name === "TimeoutError";
+        const timedOut =
+          error instanceof Error && error.name === "TimeoutError";
         warn(
           timedOut
             ? `AI model took longer than ${Math.round(timeoutMs / 1000)} seconds to reply.`

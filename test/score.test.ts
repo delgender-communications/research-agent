@@ -33,7 +33,9 @@ describe("scoreLead", () => {
 
     expect(lead?.case).toBe("OutdatedWebsite");
     expect(lead?.score).toBeGreaterThanOrEqual(80);
-    expect(lead?.evidence.every((item) => item.sourceUrl?.startsWith("http"))).toBe(true);
+    expect(
+      lead?.evidence.every((item) => item.sourceUrl?.startsWith("http")),
+    ).toBe(true);
   });
 
   it("finds nothing to report on a healthy site", () => {
@@ -64,11 +66,21 @@ describe("scoreLead", () => {
 
   it("lets a reputation problem on a fine site become a PR lead", () => {
     const site = auditHtml(MODERN_SITE, "https://brightwave.co.za/", context);
-    const audited: Audited = { candidate: candidate(), companyName: "Brightwave", website: "https://brightwave.co.za", site };
+    const audited: Audited = {
+      candidate: candidate(),
+      companyName: "Brightwave",
+      website: "https://brightwave.co.za",
+      site,
+    };
 
     const lead = scoreLead(
       audited,
-      { negative: true, evidence: [{ finding: "Complaints", sourceUrl: "https://example.com/a" }] },
+      {
+        negative: true,
+        evidence: [
+          { finding: "Complaints", sourceUrl: "https://example.com/a" },
+        ],
+      },
       now,
     );
 
@@ -78,7 +90,12 @@ describe("scoreLead", () => {
 
   it("never goes above 100", () => {
     const site = auditHtml(OLD_SITE, "http://sunbright.co.za/", context);
-    const audited: Audited = { candidate: candidate(), companyName: "S", website: "http://s.co.za", site };
+    const audited: Audited = {
+      candidate: candidate(),
+      companyName: "S",
+      website: "http://s.co.za",
+      site,
+    };
 
     const lead = scoreLead(audited, { negative: true, evidence: [] }, now);
 

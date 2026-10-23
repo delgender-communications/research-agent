@@ -18,7 +18,9 @@ async function start(handler: http.RequestListener): Promise<string> {
 
 afterEach(async () => {
   server?.closeAllConnections();
-  await new Promise<void>((resolve) => (server ? server.close(() => resolve()) : resolve()));
+  await new Promise<void>((resolve) =>
+    server ? server.close(() => resolve()) : resolve(),
+  );
   server = undefined;
 });
 

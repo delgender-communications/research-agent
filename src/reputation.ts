@@ -19,7 +19,9 @@ Only use what is in the results. Do not guess.
 Reply with JSON only, in this shape: {"negative": true or false, "reason": "one plain sentence", "evidenceIds": [numbers of the results that show it]}`;
 
 function mentionsCompany(hit: SearchHit, key: string): boolean {
-  const flat = `${hit.title} ${hit.content}`.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+  const flat = `${hit.title} ${hit.content}`
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "");
   return key.length >= 4 && flat.includes(key);
 }
 
@@ -38,7 +40,9 @@ export async function checkReputation(
   const key = nameKey(companyName);
   const own = ownHost ? registrableHost(ownHost) : null;
 
-  const hits = (await tavily.search(`"${companyName}" ${config.city} reviews complaints`))
+  const hits = (
+    await tavily.search(`"${companyName}" ${config.city} reviews complaints`)
+  )
     .filter((hit) => mentionsCompany(hit, key))
     .filter((hit) => {
       try {
@@ -52,10 +56,16 @@ export async function checkReputation(
   if (hits.length === 0) return { negative: false, evidence: [] };
 
   const listing = hits
-    .map((hit, index) => `[${index + 1}] ${clip(hit.title, 120)}\n${hit.url}\n${clip(hit.content, 450)}`)
+    .map(
+      (hit, index) =>
+        `[${index + 1}] ${clip(hit.title, 120)}\n${hit.url}\n${clip(hit.content, 450)}`,
+    )
     .join("\n\n");
 
-  const reply = await llm.complete(SYSTEM, `Company: ${companyName} (${config.city})\n\nResults:\n${listing}`);
+  const reply = await llm.complete(
+    SYSTEM,
+    `Company: ${companyName} (${config.city})\n\nResults:\n${listing}`,
+  );
   if (!reply) return null;
 
   const parsed = VerdictSchema.safeParse(extractJson(reply));
@@ -73,10 +83,15 @@ export async function checkReputation(
 
   const evidence: Evidence[] = [
     {
-      finding: clip(`Possible reputation problem: ${verdict.reason || "negative coverage found"} (unverified, check the sources).`, 400),
+      finding: clip(
+        `Possible reputation problem: ${verdict.reason || "negative coverage found"} (unverified, check the sources).`,
+        400,
+      ),
       sourceUrl: cited[0]?.url,
     },
-    ...cited.slice(0, 2).map((hit) => ({ finding: clip(hit.title, 200), sourceUrl: hit.url })),
+    ...cited
+      .slice(0, 2)
+      .map((hit) => ({ finding: clip(hit.title, 200), sourceUrl: hit.url })),
   ];
 
   return { negative: true, evidence };

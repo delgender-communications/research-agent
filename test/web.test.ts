@@ -1,10 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { cleanSocialTitle, containsKeyword, isBusinessSocialPage, isGenericName, nameKey, registrableHost } from "../src/util.js";
+import {
+  cleanSocialTitle,
+  containsKeyword,
+  isBusinessSocialPage,
+  isGenericName,
+  nameKey,
+  registrableHost,
+} from "../src/util.js";
 import { isPrivateIp, robotsDisallowsAll } from "../src/web/safeFetch.js";
 
 describe("isPrivateIp", () => {
   it("blocks private and local addresses", () => {
-    for (const ip of ["127.0.0.1", "10.1.2.3", "192.168.0.5", "172.20.1.1", "169.254.169.254", "::1", "fd00::1", "::ffff:10.0.0.1"]) {
+    for (const ip of [
+      "127.0.0.1",
+      "10.1.2.3",
+      "192.168.0.5",
+      "172.20.1.1",
+      "169.254.169.254",
+      "::1",
+      "fd00::1",
+      "::ffff:10.0.0.1",
+    ]) {
       expect(isPrivateIp(ip)).toBe(true);
     }
   });
@@ -23,8 +39,14 @@ describe("robotsDisallowsAll", () => {
 
   it("allows normal robots files", () => {
     expect(robotsDisallowsAll("User-agent: *\nDisallow: /admin/")).toBe(false);
-    expect(robotsDisallowsAll("User-agent: BadBot\nDisallow: /\n\nUser-agent: *\nDisallow:")).toBe(false);
-    expect(robotsDisallowsAll("User-agent: *\nDisallow: /\nAllow: /public")).toBe(false);
+    expect(
+      robotsDisallowsAll(
+        "User-agent: BadBot\nDisallow: /\n\nUser-agent: *\nDisallow:",
+      ),
+    ).toBe(false);
+    expect(
+      robotsDisallowsAll("User-agent: *\nDisallow: /\nAllow: /public"),
+    ).toBe(false);
   });
 });
 
@@ -47,13 +69,23 @@ describe("helpers", () => {
 
 describe("cleanSocialTitle", () => {
   it("strips the platform name and keeps the business name", () => {
-    expect(cleanSocialTitle("Solar Pros Joburg | Facebook")).toBe("Solar Pros Joburg");
+    expect(cleanSocialTitle("Solar Pros Joburg | Facebook")).toBe(
+      "Solar Pros Joburg",
+    );
     expect(cleanSocialTitle("Solar Pros - Home | Facebook")).toBe("Solar Pros");
-    expect(cleanSocialTitle("I Solar Solutions | Roodepoort | Facebook")).toBe("I Solar Solutions");
+    expect(cleanSocialTitle("I Solar Solutions | Roodepoort | Facebook")).toBe(
+      "I Solar Solutions",
+    );
   });
 });
 
-const ignore = ["solar", "johannesburg", "roodepoort", "midrand", "solar installation"];
+const ignore = [
+  "solar",
+  "johannesburg",
+  "roodepoort",
+  "midrand",
+  "solar installation",
+];
 
 describe("isGenericName", () => {
   it("rejects search phrases and page headings", () => {
@@ -70,7 +102,14 @@ describe("isGenericName", () => {
   });
 
   it("keeps real company names", () => {
-    for (const name of ["JM Solar Solutions", "Sinetech", "SolarZA", "Sunworx Solar", "Full Solar Systems", "I Solar Solutions"]) {
+    for (const name of [
+      "JM Solar Solutions",
+      "Sinetech",
+      "SolarZA",
+      "Sunworx Solar",
+      "Full Solar Systems",
+      "I Solar Solutions",
+    ]) {
       expect(isGenericName(name, ignore)).toBe(false);
     }
   });
@@ -78,11 +117,25 @@ describe("isGenericName", () => {
 
 describe("isBusinessSocialPage", () => {
   it("accepts business pages and rejects posts and groups", () => {
-    expect(isBusinessSocialPage("https://www.facebook.com/sunbrightsolar")).toBe(true);
-    expect(isBusinessSocialPage("https://www.instagram.com/sunbright/")).toBe(true);
-    expect(isBusinessSocialPage("https://www.facebook.com/groups/joburgsolar/posts/123")).toBe(false);
-    expect(isBusinessSocialPage("https://www.facebook.com/someone/posts/pfbid0abc")).toBe(false);
-    expect(isBusinessSocialPage("https://www.instagram.com/p/Cabc123/")).toBe(false);
-    expect(isBusinessSocialPage("https://www.facebook.com/reel/123")).toBe(false);
+    expect(
+      isBusinessSocialPage("https://www.facebook.com/sunbrightsolar"),
+    ).toBe(true);
+    expect(isBusinessSocialPage("https://www.instagram.com/sunbright/")).toBe(
+      true,
+    );
+    expect(
+      isBusinessSocialPage(
+        "https://www.facebook.com/groups/joburgsolar/posts/123",
+      ),
+    ).toBe(false);
+    expect(
+      isBusinessSocialPage("https://www.facebook.com/someone/posts/pfbid0abc"),
+    ).toBe(false);
+    expect(isBusinessSocialPage("https://www.instagram.com/p/Cabc123/")).toBe(
+      false,
+    );
+    expect(isBusinessSocialPage("https://www.facebook.com/reel/123")).toBe(
+      false,
+    );
   });
 });

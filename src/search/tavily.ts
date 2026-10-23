@@ -51,7 +51,10 @@ export class TavilyClient {
         signal: AbortSignal.timeout(30_000),
       });
     } catch (error) {
-      warn(`Search failed for "${query}":`, error instanceof Error ? error.message : error);
+      warn(
+        `Search failed for "${query}":`,
+        error instanceof Error ? error.message : error,
+      );
       return [];
     }
 
@@ -59,8 +62,14 @@ export class TavilyClient {
       throw new Error("Tavily rejected the API key. Check TAVILY_API_KEY.");
     }
 
-    if (response.status === 429 || response.status === 432 || response.status === 433) {
-      warn("Tavily says the rate or monthly limit has been reached. Stopping searches.");
+    if (
+      response.status === 429 ||
+      response.status === 432 ||
+      response.status === 433
+    ) {
+      warn(
+        "Tavily says the rate or monthly limit has been reached. Stopping searches.",
+      );
       this.used = this.budget;
       return [];
     }
@@ -70,11 +79,16 @@ export class TavilyClient {
       return [];
     }
 
-    let data: { results?: { title?: string; url?: string; content?: string }[] };
+    let data: {
+      results?: { title?: string; url?: string; content?: string }[];
+    };
     try {
       data = (await response.json()) as typeof data;
     } catch (error) {
-      warn(`Couldn't read the search reply for "${query}":`, error instanceof Error ? error.message : error);
+      warn(
+        `Couldn't read the search reply for "${query}":`,
+        error instanceof Error ? error.message : error,
+      );
       return [];
     }
 

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { auditHtml, deriveCompanyName, findCopyrightYear } from "../src/audit.js";
+import {
+  auditHtml,
+  deriveCompanyName,
+  findCopyrightYear,
+} from "../src/audit.js";
 import { MODERN_SITE, OLD_SITE } from "./fixtures.js";
 
 const context = {
@@ -15,7 +19,9 @@ describe("auditHtml", () => {
     expect(site.https).toBe(false);
     expect(site.hasViewport).toBe(false);
     expect(site.copyrightYear).toBe(2016);
-    expect(site.legacyMarkup).toEqual(expect.arrayContaining(["font tags", "center tags"]));
+    expect(site.legacyMarkup).toEqual(
+      expect.arrayContaining(["font tags", "center tags"]),
+    );
     expect(site.socialLinks).toHaveLength(0);
     expect(site.matchesIndustry).toBe(true);
     expect(site.matchesLocation).toBe(true);
@@ -34,12 +40,19 @@ describe("auditHtml", () => {
     expect(site.https).toBe(true);
     expect(site.hasViewport).toBe(true);
     expect(site.legacyMarkup).toHaveLength(0);
-    expect(site.socialLinks.map((link) => link.platform).sort()).toEqual(["Facebook", "Instagram"]);
+    expect(site.socialLinks.map((link) => link.platform).sort()).toEqual([
+      "Facebook",
+      "Instagram",
+    ]);
     expect(site.siteName).toBe("Brightwave Energy");
   });
 
   it("does not match unrelated sites", () => {
-    const site = auditHtml("<html><head><title>Bakery</title></head><body>Bread in Cape Town</body></html>", "https://bakery.example/", context);
+    const site = auditHtml(
+      "<html><head><title>Bakery</title></head><body>Bread in Cape Town</body></html>",
+      "https://bakery.example/",
+      context,
+    );
 
     expect(site.matchesIndustry).toBe(false);
     expect(site.matchesLocation).toBe(false);
@@ -61,11 +74,19 @@ describe("findCopyrightYear", () => {
 
 describe("deriveCompanyName", () => {
   it("prefers the site name when there is one", () => {
-    expect(deriveCompanyName("Brightwave Energy", "Whatever", "brightwave.co.za")).toBe("Brightwave Energy");
+    expect(
+      deriveCompanyName("Brightwave Energy", "Whatever", "brightwave.co.za"),
+    ).toBe("Brightwave Energy");
   });
 
   it("picks the title part that matches the web address", () => {
-    expect(deriveCompanyName("", "Home | Sunbright Solar - Johannesburg", "sunbright.co.za")).toBe("Sunbright Solar");
+    expect(
+      deriveCompanyName(
+        "",
+        "Home | Sunbright Solar - Johannesburg",
+        "sunbright.co.za",
+      ),
+    ).toBe("Sunbright Solar");
   });
 
   it("falls back to the web address", () => {

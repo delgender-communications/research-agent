@@ -4,7 +4,9 @@ import { info, warn } from "./util.js";
 
 const ResultSchema = z.object({
   added: z.number().int(),
-  skipped: z.array(z.object({ companyName: z.string(), reason: z.string() })).default([]),
+  skipped: z
+    .array(z.object({ companyName: z.string(), reason: z.string() }))
+    .default([]),
 });
 
 export interface DeliveryReport {
@@ -44,14 +46,20 @@ export class PortalClient {
             report.added += single.data.added;
             report.skipped.push(...single.data.skipped);
           } else {
-            report.failed.push({ companyName: lead.companyName, error: single.error });
+            report.failed.push({
+              companyName: lead.companyName,
+              error: single.error,
+            });
           }
         }
         continue;
       }
 
       for (const lead of batch) {
-        report.failed.push({ companyName: lead.companyName, error: outcome.error });
+        report.failed.push({
+          companyName: lead.companyName,
+          error: outcome.error,
+        });
       }
     }
 
@@ -67,39 +75,75 @@ export class PortalClient {
   > {
     let response: Response;
     try {
-      response = await fetch(`${this.baseUrl.replace(/\/$/, "")}/api/v1/research-agent/leads`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Api-Key": this.apiKey },
-        body: JSON.stringify({ runId, leads }),
-        signal: AbortSignal.timeout(60_000),
-      });
+      response = await fetch(
+        `${this.baseUrl.replace(/\/$/, "")}/api/v1/research-agent/leads`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Api-Key": this.apiKey,
+          },
+          body: JSON.stringify({ runId, leads }),
+          signal: AbortSignal.timeout(60_000),
+        },
+      );
     } catch (error) {
-      return { ok: false, status: 0, error: error instanceof Error ? error.message : "network error" };
+      return {
+        ok: false,
+        status: 0,
+        error: error instanceof Error ? error.message : "network error",
+      };
     }
 
     if (response.status === 401) {
-      return { ok: false, status: 401, error: "The portal rejected the API key (401). Check PORTAL_API_KEY." };
+      return {
+        ok: false,
+        status: 401,
+        error: "The portal rejected the API key (401). Check PORTAL_API_KEY.",
+      };
     }
 
     if (response.status === 503) {
-      return { ok: false, status: 503, error: "The portal says the research agent isn't set up (503). Set ResearchAgent__ApiKey on the server." };
+      return {
+        ok: false,
+        status: 503,
+        error:
+          "The portal says the research agent isn't set up (503). Set ResearchAgent__ApiKey on the server.",
+      };
     }
 
     try {
       if (!response.ok) {
         const body = (await response.text()).slice(0, 400);
-        return { ok: false, status: response.status, error: `Portal answered ${response.status}: ${body}` };
+        return {
+          ok: false,
+          status: response.status,
+          error: `Portal answered ${response.status}: ${body}`,
+        };
       }
 
       const parsed = ResultSchema.safeParse(await response.json());
       if (parsed.success) {
-        info(`  portal: ${parsed.data.added} added, ${parsed.data.skipped.length} skipped`);
+        info(
+          `  portal: ${parsed.data.added} added, ${parsed.data.skipped.length} skipped`,
+        );
         return { ok: true, data: parsed.data };
       }
     } catch (error) {
-      return { ok: false, status: response.status, error: error instanceof Error ? error.message : "couldn't read the portal's reply" };
+      return {
+        ok: false,
+        status: response.status,
+        error:
+          error instanceof Error
+            ? error.message
+            : "couldn't read the portal's reply",
+      };
     }
 
-    return { ok: false, status: response.status, error: "The portal's reply wasn't in the expected shape." };
+    return {
+      ok: false,
+      status: response.status,
+      error: "The portal's reply wasn't in the expected shape.",
+    };
   }
 }
