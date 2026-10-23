@@ -70,9 +70,13 @@ export class TavilyClient {
       return [];
     }
 
-    const data = (await response.json()) as {
-      results?: { title?: string; url?: string; content?: string }[];
-    };
+    let data: { results?: { title?: string; url?: string; content?: string }[] };
+    try {
+      data = (await response.json()) as typeof data;
+    } catch (error) {
+      warn(`Couldn't read the search reply for "${query}":`, error instanceof Error ? error.message : error);
+      return [];
+    }
 
     return (data.results ?? [])
       .filter((item) => typeof item.url === "string" && item.url.length > 0)
