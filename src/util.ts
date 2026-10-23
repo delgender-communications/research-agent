@@ -90,10 +90,58 @@ export function containsKeyword(text: string, keywords: string[]): boolean {
   });
 }
 
-// "Sunbright Solar | Facebook" -> "Sunbright Solar"
+// "Sunbright Solar | Roodepoort | Facebook" -> "Sunbright Solar"
 export function cleanSocialTitle(title: string): string {
-  return title
+  const withoutPlatform = title
     .replace(/\s*[|\-–—]\s*(?:facebook|instagram)\b.*$/i, "")
     .replace(/\s*[|\-–—]\s*(?:home|posts|about|photos|reviews)\s*$/i, "")
     .trim();
+
+  // "Business name | Suburb": keep the business name.
+  const [first] = withoutPlatform.split(/\s[|–—·]\s|\s-\s/);
+  return (first ?? withoutPlatform).trim();
+}
+
+const GENERIC_WORDS = new Set([
+  "panel", "panels", "installation", "installations", "installer", "installers", "install",
+  "company", "companies", "service", "services", "quote", "quotes", "quotation", "quotations",
+  "in", "for", "near", "and", "the", "of", "a", "to", "best", "top", "price", "prices", "cost",
+  "costs", "home", "homes", "business", "businesses", "commercial", "residential", "official", "page",
+]);
+
+// True for names that are really search phrases or page headings ("Solar panel
+// installation quotes in Midrand", "reputable solar installer in johannesburg?")
+// and not the name of a company. `ignore` holds the industry and place words.
+export function isGenericName(name: string, ignore: string[]): boolean {
+  const trimmed = name.trim();
+  if (trimmed.length < 3 || trimmed.length > 80 || trimmed.endsWith("?")) return true;
+  if (/^(?:best|top|reputable|affordable|cheap|cheapest|find|looking for|need|where|who|how|what|why)\b/i.test(trimmed)) {
+    return true;
+  }
+
+  const split = (text: string) => text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const ignored = new Set(ignore.flatMap(split));
+  return split(trimmed).every((word) => GENERIC_WORDS.has(word) || ignored.has(word));
+}
+
+// Facebook and Instagram results include posts, groups, reels and photos.
+// Only the page of a business or person is worth treating as a company.
+export function isBusinessSocialPage(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+
+  const path = parsed.pathname.toLowerCase();
+  const blocked = [
+    "/posts", "/groups", "/permalink", "/watch", "/reel", "/reels", "/photo", "/photos",
+    "/videos", "/events", "/story", "/stories", "/share", "/hashtag", "/marketplace",
+    "/explore", "/tags", "/p/", "/tv/", "/pages/category", "/public",
+  ];
+  if (blocked.some((part) => path.includes(part))) return false;
+
+  const segments = path.split("/").filter(Boolean);
+  return segments.length >= 1 && segments.length <= 2;
 }
