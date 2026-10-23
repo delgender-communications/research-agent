@@ -33,7 +33,7 @@ function hostMatches(host: string, list: string[]): boolean {
 
 export type HitKind = "noise" | "directory" | "social" | "site";
 
-export function classifyHit(hit: SearchHit): HitKind {
+export function classifyHit(hit: SearchHit, extraNoiseHosts: string[] = []): HitKind {
   let host: string;
   try {
     host = normalizeHost(new URL(hit.url).hostname);
@@ -42,7 +42,7 @@ export function classifyHit(hit: SearchHit): HitKind {
   }
 
   if (hostMatches(host, FACEBOOK_HOSTS)) return "social";
-  if (hostMatches(host, NOISE_HOSTS)) return "noise";
+  if (hostMatches(host, NOISE_HOSTS) || hostMatches(host, extraNoiseHosts)) return "noise";
   if (hostMatches(host, DIRECTORY_HOSTS) || DIRECTORY_TITLE.test(hit.title)) return "directory";
   return "site";
 }
@@ -88,6 +88,7 @@ async function expandDirectory(
   hit: SearchHit,
   fetcher: SafeFetcher,
   limit: number,
+  extraNoiseHosts: string[],
 ): Promise<Candidate[]> {
   const page = await fetcher.getHtml(hit.url);
   if (!page.ok) return [];
@@ -114,7 +115,7 @@ async function expandDirectory(
 
     const host = normalizeHost(absolute.hostname);
     if (registrableHost(host) === sourceHost) return;
-    if (hostMatches(host, NOISE_HOSTS) || hostMatches(host, DIRECTORY_HOSTS) ||
+    if (hostMatches(host, NOISE_HOSTS) || hostMatches(host, extraNoiseHosts) || hostMatches(host, DIRECTORY_HOSTS) ||
         hostMatches(host, FACEBOOK_HOSTS) || platformOf(absolute.toString())) {
       return;
     }
@@ -157,7 +158,7 @@ export async function discover(
     }
 
     for (const hit of hits) {
-      const kind = classifyHit(hit);
+      const kind = classifyHit(hit, config.excludeHosts);
 
       if (kind === "noise") continue;
 
@@ -196,7 +197,7 @@ export async function discover(
 
   // Directories link out to many companies at once, so they are worth a look.
   for (const hit of directories.slice(0, 3)) {
-    const expanded = await expandDirectory(hit, fetcher, 15);
+    const expanded = await expandDirectory(hit, fetcher, 15, config.excludeHosts);
     info(`  directory ${hit.url}: ${expanded.length} companies`);
     for (const candidate of expanded) {
       if (!byHost.has(candidate.host)) byHost.set(candidate.host, candidate);
