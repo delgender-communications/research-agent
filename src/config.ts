@@ -9,6 +9,11 @@ const ConfigSchema = z.object({
   industryKeywords: z.array(z.string().min(1)).min(1),
   locationKeywords: z.array(z.string().min(1)).min(1),
   suburbs: z.array(z.string().min(1)).default([]),
+  // Websites to ignore completely, such as big franchise brands and listing portals.
+  excludeHosts: z.array(z.string().min(1)).default([]),
+  // Words that only show up in search headings for this industry ("for sale",
+  // "agents"). A name made of nothing but these is not a company.
+  genericNameWords: z.array(z.string().min(1)).default([]),
   queryTemplates: z.array(z.string().min(1)).min(1),
   maxSearchesPerRun: z.number().int().min(1).max(40).default(10),
   resultsPerSearch: z.number().int().min(1).max(20).default(10),
