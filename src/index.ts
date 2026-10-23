@@ -15,7 +15,13 @@ import { cleanSocialTitle, clip, containsKeyword, hostOf, info, isGenericName, m
 import { SafeFetcher } from "./web/safeFetch.js";
 
 function genericWords(config: AgentConfig): string[] {
-  return [...config.industryKeywords, ...config.locationKeywords, config.city, config.industry];
+  return [
+    ...config.industryKeywords,
+    ...config.locationKeywords,
+    ...config.genericNameWords,
+    config.city,
+    config.industry,
+  ];
 }
 
 function snippetFits(candidate: Candidate, config: AgentConfig): boolean {
