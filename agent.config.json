@@ -1,9 +1,13 @@
 {
   "city": "Johannesburg",
   "country": "south africa",
-  "industry": "private school",
-  "industryLabel": "Private school",
-  "industryKeywords": ["school", "schools", "college", "academy", "preschool", "pre-school", "creche", "grade r", "learners"],
+  "industry": "estate agency",
+  "industryLabel": "Estate agency / property",
+  "industryKeywords": [
+    "estate agent", "estate agents", "estate agency", "real estate", "realty",
+    "property developer", "property developers", "property development", "property developments",
+    "letting agent", "property management"
+  ],
   "locationKeywords": [
     "johannesburg", "joburg", "gauteng", "sandton", "randburg", "roodepoort", "midrand", "fourways",
     "bryanston", "rosebank", "alberton", "germiston", "edenvale", "boksburg", "benoni",
@@ -13,12 +17,24 @@
     "Sandton", "Randburg", "Roodepoort", "Midrand", "Fourways", "Bryanston", "Rosebank",
     "Alberton", "Germiston", "Edenvale", "Boksburg", "Kempton Park", "Centurion", "Benoni"
   ],
+  "excludeHosts": [
+    "property24.com", "privateproperty.co.za", "remax.co.za", "pamgolding.co.za", "seeff.com",
+    "rawson.co.za", "chaseveritt.co.za", "century21.co.za", "harcourts.co.za", "jawitz.co.za",
+    "leapfrogproperty.com", "lewgeffen.co.za", "engelvoelkers.com", "ooba.co.za"
+  ],
+  "genericNameWords": [
+    "property", "properties", "estate", "agent", "agents", "agency", "agencies", "realty",
+    "developer", "developers", "development", "developments", "sale", "rent", "rental", "rentals",
+    "let", "letting", "listings", "listing", "houses", "house", "apartments", "flats", "real",
+    "independent", "management", "find", "buy", "buying", "selling", "sell"
+  ],
   "queryTemplates": [
-  "private schools {city}",
-  "private school {suburb} admissions",
-  "independent school {suburb} contact us",
-  "best private schools in {city}",
-  "preschool {suburb}"
+    "independent estate agency {city}",
+    "estate agents {suburb} contact us",
+    "property developers {city}",
+    "independent estate agents {suburb}",
+    "estate agency {city} facebook",
+    "best estate agents in {city}"
   ],
   "maxSearchesPerRun": 10,
   "resultsPerSearch": 10,
