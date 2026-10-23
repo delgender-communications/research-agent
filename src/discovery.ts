@@ -4,7 +4,7 @@ import type { AgentConfig } from "./config.js";
 import { SearchLimitReached, type TavilyClient } from "./search/tavily.js";
 import type { Candidate, SearchHit } from "./types.js";
 import { SafeFetcher } from "./web/safeFetch.js";
-import { cleanSocialTitle, info, nameKey, normalizeHost, registrableHost, warn } from "./util.js";
+import { cleanSocialTitle, info, isBusinessSocialPage, nameKey, normalizeHost, registrableHost, warn } from "./util.js";
 
 // Sites that show up in results but are never a company we'd approach.
 const NOISE_HOSTS = [
@@ -169,7 +169,7 @@ export async function discover(
       if (kind === "social") {
         const platform = platformOf(hit.url);
         const host = homepageOf(hit.url)?.host;
-        if (!platform || !host) continue;
+        if (!platform || !host || !isBusinessSocialPage(hit.url)) continue;
         const name = cleanSocialTitle(hit.title);
         if (!name) continue;
         socialOnly.push({
