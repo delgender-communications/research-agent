@@ -11,8 +11,12 @@ import { TavilyClient } from "./search/tavily.js";
 import { SeenState } from "./state.js";
 import { summarise } from "./summarise.js";
 import type { Audited, Candidate, PortalLead, ReputationResult, ScoredLead } from "./types.js";
-import { cleanSocialTitle, clip, containsKeyword, hostOf, info, mapPool, warn } from "./util.js";
+import { cleanSocialTitle, clip, containsKeyword, hostOf, info, isGenericName, mapPool, warn } from "./util.js";
 import { SafeFetcher } from "./web/safeFetch.js";
+
+function genericWords(config: AgentConfig): string[] {
+  return [...config.industryKeywords, ...config.locationKeywords, config.city, config.industry];
+}
 
 function snippetFits(candidate: Candidate, config: AgentConfig): boolean {
   return (
@@ -32,7 +36,7 @@ async function auditCandidate(
   if (candidate.socialOnly) {
     if (!snippetFits(candidate, config)) return null;
     const name = cleanSocialTitle(candidate.nameHint);
-    return name ? { candidate, companyName: name } : null;
+    return name && !isGenericName(name, genericWords(config)) ? { candidate, companyName: name } : null;
   }
 
   if (!candidate.url) return null;
@@ -45,9 +49,12 @@ async function auditCandidate(
     // We can't read the site, so only keep it if the search result itself showed it fits.
     if (!snippetFits(candidate, config)) return null;
 
+    const failedName = deriveCompanyName("", candidate.nameHint, candidate.host);
+    if (isGenericName(failedName, genericWords(config))) return null;
+
     return {
       candidate,
-      companyName: deriveCompanyName("", candidate.nameHint, candidate.host),
+      companyName: failedName,
       website: candidate.url,
       failure: { reason: page.reason, status: page.status },
     };
@@ -61,9 +68,12 @@ async function auditCandidate(
 
   if (!site.matchesIndustry || !site.matchesLocation) return null;
 
+  const companyName = deriveCompanyName(site.siteName, site.title, candidate.host);
+  if (isGenericName(companyName, genericWords(config))) return null;
+
   return {
     candidate,
-    companyName: deriveCompanyName(site.siteName, site.title, candidate.host),
+    companyName,
     website: new URL(site.url).origin,
     site,
   };
@@ -159,8 +169,12 @@ async function main() {
     for (const { item } of ranked) {
       if (tavily.searchesLeft === 0) break;
       const ownHost = item.website ? hostOf(item.website) : null;
-      const result = await checkReputation(item.companyName, ownHost, config, tavily, llm);
-      if (result) reputation.set(item, result);
+      try {
+        const result = await checkReputation(item.companyName, ownHost, config, tavily, llm);
+        if (result) reputation.set(item, result);
+      } catch (error) {
+        warn(`Reputation check skipped for ${item.companyName}:`, error instanceof Error ? error.message : error);
+      }
     }
   }
 
@@ -174,7 +188,13 @@ async function main() {
   info(`\n4. ${scored.length} leads at or above the minimum score of ${config.minScore}`);
 
   // 5. Write the notes
-  const summaries = await summarise(scored, llm);
+  let summaries: Awaited<ReturnType<typeof summarise>>;
+  try {
+    summaries = await summarise(scored, llm);
+  } catch (error) {
+    warn("Writing the notes with the AI model failed, using plain notes:", error instanceof Error ? error.message : error);
+    summaries = await summarise(scored, null);
+  }
   const leads = scored.map((lead) => toPortalLead(lead, summaries.get(lead) ?? "", config));
 
   mkdirSync(env.OUT_DIR, { recursive: true });
