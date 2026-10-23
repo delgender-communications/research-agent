@@ -28,6 +28,9 @@ const EnvSchema = z.object({
   LLM_BASE_URL: z.string().url().optional(),
   LLM_API_KEY: z.string().min(1).optional(),
   LLM_MODEL: z.string().min(1).optional(),
+  // How long to wait for the AI model to answer one request. Free models can queue
+  // for minutes, and nothing here is urgent, so the default is generous.
+  LLM_TIMEOUT_SECONDS: z.coerce.number().int().min(10).max(900).default(240),
   CONTACT: z.string().min(1).optional(),
   STATE_FILE: z.string().min(1).default(".state/seen.json"),
   OUT_DIR: z.string().min(1).default("out"),
@@ -66,6 +69,11 @@ export function loadEnv(): AgentEnv {
 
 export function llmSettings(env: AgentEnv) {
   return env.LLM_BASE_URL && env.LLM_API_KEY && env.LLM_MODEL
-    ? { baseUrl: env.LLM_BASE_URL, apiKey: env.LLM_API_KEY, model: env.LLM_MODEL }
+    ? {
+        baseUrl: env.LLM_BASE_URL,
+        apiKey: env.LLM_API_KEY,
+        model: env.LLM_MODEL,
+        timeoutMs: env.LLM_TIMEOUT_SECONDS * 1000,
+      }
     : null;
 }
