@@ -19,7 +19,7 @@
   "independent school {suburb} contact us",
   "best private schools in {city}",
   "preschool {suburb}"
-  ]
+  ],
   "maxSearchesPerRun": 10,
   "resultsPerSearch": 10,
   "reputationChecks": 3,
