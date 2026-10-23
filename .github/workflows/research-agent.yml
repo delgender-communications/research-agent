@@ -1,9 +1,9 @@
 name: Research agent
 
 on:
-  schedule:
+  # schedule:
     # Monday, Wednesday and Friday at 05:00 UTC (07:00 in Johannesburg).
-    - cron: "0 5 * * 1,3,5"
+    # - cron: "0 5 * * 1,3,5"
   workflow_dispatch:
     inputs:
       dry_run:
