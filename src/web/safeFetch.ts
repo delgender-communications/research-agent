@@ -163,7 +163,15 @@ export class SafeFetcher {
         return { ok: false, reason: "not-html" };
       }
 
-      const html = await this.readBody(response);
+      let html: string;
+      try {
+        html = await this.readBody(response);
+      } catch (error) {
+        const timedOut = error instanceof Error &&
+          (error.name === "TimeoutError" || error.name === "AbortError");
+        return { ok: false, reason: timedOut ? "timeout" : "network" };
+      }
+
       return { ok: true, url: current, status: response.status, html, ms: Date.now() - started };
     }
 
