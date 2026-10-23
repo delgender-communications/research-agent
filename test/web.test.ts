@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { containsKeyword, nameKey, registrableHost } from "../src/util.js";
+import { cleanSocialTitle, containsKeyword, isBusinessSocialPage, isGenericName, nameKey, registrableHost } from "../src/util.js";
 import { isPrivateIp, robotsDisallowsAll } from "../src/web/safeFetch.js";
 
 describe("isPrivateIp", () => {
@@ -46,9 +46,43 @@ describe("helpers", () => {
 });
 
 describe("cleanSocialTitle", () => {
-  it("strips the platform name from page titles", async () => {
-    const { cleanSocialTitle } = await import("../src/util.js");
+  it("strips the platform name and keeps the business name", () => {
     expect(cleanSocialTitle("Solar Pros Joburg | Facebook")).toBe("Solar Pros Joburg");
     expect(cleanSocialTitle("Solar Pros - Home | Facebook")).toBe("Solar Pros");
+    expect(cleanSocialTitle("I Solar Solutions | Roodepoort | Facebook")).toBe("I Solar Solutions");
+  });
+});
+
+const ignore = ["solar", "johannesburg", "roodepoort", "midrand", "solar installation"];
+
+describe("isGenericName", () => {
+  it("rejects search phrases and page headings", () => {
+    for (const name of [
+      "reputable solar installer in johannesburg?",
+      "Solar panel installation quotes in Midrand",
+      "Solar Installation Roodepoort",
+      "Solar installers in Midrand",
+      "Solar Panel Installers",
+      "Best solar companies",
+    ]) {
+      expect(isGenericName(name, ignore)).toBe(true);
+    }
+  });
+
+  it("keeps real company names", () => {
+    for (const name of ["JM Solar Solutions", "Sinetech", "SolarZA", "Sunworx Solar", "Full Solar Systems", "I Solar Solutions"]) {
+      expect(isGenericName(name, ignore)).toBe(false);
+    }
+  });
+});
+
+describe("isBusinessSocialPage", () => {
+  it("accepts business pages and rejects posts and groups", () => {
+    expect(isBusinessSocialPage("https://www.facebook.com/sunbrightsolar")).toBe(true);
+    expect(isBusinessSocialPage("https://www.instagram.com/sunbright/")).toBe(true);
+    expect(isBusinessSocialPage("https://www.facebook.com/groups/joburgsolar/posts/123")).toBe(false);
+    expect(isBusinessSocialPage("https://www.facebook.com/someone/posts/pfbid0abc")).toBe(false);
+    expect(isBusinessSocialPage("https://www.instagram.com/p/Cabc123/")).toBe(false);
+    expect(isBusinessSocialPage("https://www.facebook.com/reel/123")).toBe(false);
   });
 });
