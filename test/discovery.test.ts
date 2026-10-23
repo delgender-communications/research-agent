@@ -19,6 +19,15 @@ describe("classifyHit", () => {
   });
 });
 
+describe("classifyHit with excluded hosts", () => {
+  it("treats configured hosts and their subdomains as noise", () => {
+    const hit = { title: "Office", url: "https://www.remax.co.za/office/sandton", content: "" };
+
+    expect(classifyHit(hit)).toBe("site");
+    expect(classifyHit(hit, ["remax.co.za"])).toBe("noise");
+  });
+});
+
 describe("buildQueries", () => {
   it("fills in the templates and rotates suburbs by day", () => {
     const monday = buildQueries(config, new Date("2026-10-19T00:00:00Z"), 10);
