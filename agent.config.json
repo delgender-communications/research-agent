@@ -1,9 +1,9 @@
 {
   "city": "Johannesburg",
   "country": "south africa",
-  "industry": "solar installation",
-  "industryLabel": "Solar installation",
-  "industryKeywords": ["solar", "photovoltaic", "pv", "inverter", "inverters", "battery storage", "renewable energy"],
+  "industry": "private school",
+  "industryLabel": "Private school",
+  "industryKeywords": ["school", "schools", "college", "academy", "preschool", "pre-school", "creche", "grade r", "learners"],
   "locationKeywords": [
     "johannesburg", "joburg", "gauteng", "sandton", "randburg", "roodepoort", "midrand", "fourways",
     "bryanston", "rosebank", "alberton", "germiston", "edenvale", "boksburg", "benoni",
@@ -14,12 +14,12 @@
     "Alberton", "Germiston", "Edenvale", "Boksburg", "Kempton Park", "Centurion", "Benoni"
   ],
   "queryTemplates": [
-    "{industry} companies {city}",
-    "{industry} installers {suburb}",
-    "{industry} {suburb} contact us",
-    "best {industry} companies in {city}",
-    "{industry} company {city} facebook"
-  ],
+  "private schools {city}",
+  "private school {suburb} admissions",
+  "independent school {suburb} contact us",
+  "best private schools in {city}",
+  "preschool {suburb}"
+  ]
   "maxSearchesPerRun": 10,
   "resultsPerSearch": 10,
   "reputationChecks": 3,
