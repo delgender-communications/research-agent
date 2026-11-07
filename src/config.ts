@@ -18,9 +18,18 @@ const ConfigSchema = z.object({
   maxSearchesPerRun: z.number().int().min(1).max(40).default(10),
   resultsPerSearch: z.number().int().min(1).max(20).default(10),
   reputationChecks: z.number().int().min(0).max(10).default(3),
+  // One search each, to look for a company's LinkedIn/Instagram/Facebook pages when the
+  // website can't show them (sites drawn by JavaScript, or sites with no LinkedIn link).
+  socialChecks: z.number().int().min(0).max(10).default(4),
   maxSitesToAudit: z.number().int().min(1).max(100).default(40),
   maxLeadsPerRun: z.number().int().min(1).max(100).default(15),
   minScore: z.number().int().min(0).max(100).default(30),
+  // Companies that fit the industry and place but don't reach minScore, or that the agent
+  // couldn't judge (such as sites drawn by JavaScript), go to the portal's "Needs research"
+  // list for a person to look at. 0 turns that list off.
+  maxResearchPerRun: z.number().int().min(0).max(100).default(25),
+  // Lowest score that still gets sent for research. 0 keeps every confirmed company.
+  researchMinScore: z.number().int().min(0).max(100).default(0),
 });
 
 export type AgentConfig = z.infer<typeof ConfigSchema>;
@@ -58,7 +67,9 @@ export function loadEnv(): AgentEnv {
 
   // GitHub passes unset secrets as empty strings, so treat "" as "not set".
   const cleaned = Object.fromEntries(
-    Object.entries(process.env).filter(([, value]) => value !== undefined && value !== ""),
+    Object.entries(process.env).filter(
+      ([, value]) => value !== undefined && value !== "",
+    ),
   );
 
   const parsed = EnvSchema.safeParse(cleaned);

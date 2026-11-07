@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { extractJson, type LlmClient } from "./llm.js";
-import type { LeadCase, ScoredLead } from "./types.js";
+import type { LeadCase, Triaged } from "./types.js";
 import { clip, info } from "./util.js";
 
 const CASE_PHRASE: Record<LeadCase, string> = {
@@ -8,12 +8,23 @@ const CASE_PHRASE: Record<LeadCase, string> = {
   WeakSocialPresence: "a weak social media presence",
   NoWebsite: "no website of their own",
   OutdatedWebsite: "an outdated or broken website",
+  LowVisibility:
+    "little public presence (few signs of news, case studies or share-ready branding)",
   Other: "something worth a look",
 };
 
 // Plain summary built from the findings. Used whenever the model isn't available.
-export function fallbackSummary(lead: ScoredLead): string {
+export function fallbackSummary(item: Triaged): string {
+  const { lead } = item;
   const [first, second] = lead.evidence;
+
+  if (item.needsResearch) {
+    return clip(
+      `Worth a closer look. ${item.researchReasons[0] ?? ""} ${first?.finding ?? ""}`,
+      600,
+    );
+  }
+
   return clip(
     `Looks like ${CASE_PHRASE[lead.case]}. ${first?.finding ?? ""} ${second?.finding ?? ""}`,
     600,
@@ -27,12 +38,16 @@ const ReplySchema = z.object({
 const SYSTEM = `You write short notes for a PR and brand consultancy in Johannesburg that is deciding which companies to approach.
 For each company you get numbered facts found by an automated check. Write 1 or 2 plain sentences per company on why we might be able to help them.
 Use only the facts given. Do not invent anything, do not mention scores, and do not use hype.
+Some companies are marked "needs a human check". The automated check couldn't judge them fully, so do not claim a problem. Say in plain words what a person should look at.
 Reply with JSON only, in this shape: {"summaries": [{"id": 1, "summary": "..."}]}`;
 
 const BATCH_SIZE = 8;
 
-export async function summarise(leads: ScoredLead[], llm: LlmClient | null): Promise<Map<ScoredLead, string>> {
-  const result = new Map<ScoredLead, string>();
+export async function summarise(
+  leads: Triaged[],
+  llm: LlmClient | null,
+): Promise<Map<Triaged, string>> {
+  const result = new Map<Triaged, string>();
   for (const lead of leads) result.set(lead, fallbackSummary(lead));
 
   if (!llm) return result;
@@ -41,9 +56,15 @@ export async function summarise(leads: ScoredLead[], llm: LlmClient | null): Pro
     const batch = leads.slice(start, start + BATCH_SIZE);
 
     const prompt = batch
-      .map((lead, index) => {
-        const facts = lead.evidence.map((item) => `- ${item.finding}`).join("\n");
-        return `${index + 1}. ${lead.audited.companyName} (main issue: ${CASE_PHRASE[lead.case]})\n${facts}`;
+      .map((item, index) => {
+        const { lead } = item;
+        const facts = lead.evidence
+          .map((entry) => `- ${entry.finding}`)
+          .join("\n");
+        const heading = item.needsResearch
+          ? `needs a human check: ${item.researchReasons[0] ?? "not fully checked"}`
+          : `main issue: ${CASE_PHRASE[lead.case]}`;
+        return `${index + 1}. ${lead.audited.companyName} (${heading})\n${facts}`;
       })
       .join("\n\n");
 
@@ -52,7 +73,9 @@ export async function summarise(leads: ScoredLead[], llm: LlmClient | null): Pro
 
     const parsed = ReplySchema.safeParse(extractJson(reply));
     if (!parsed.success) {
-      info("  Couldn't read the model's summaries for one batch, using plain ones.");
+      info(
+        "  Couldn't read the model's summaries for one batch, using plain ones.",
+      );
       continue;
     }
 
